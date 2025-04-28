@@ -1,0 +1,130 @@
+{% extends "layout.html" %}
+
+{% block title %}Home{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-white">
+    <!-- Hero Section -->
+    <div class="relative h-screen flex flex-col items-center justify-center overflow-hidden">
+        <!-- Background Effect -->
+        <div class="absolute inset-0 z-0">
+            <div class="absolute top-0 left-0 w-full h-full bg-gradient-to-br from-green-100/50 via-white to-white"></div>
+            <div class="absolute top-0 right-0 w-1/2 h-1/2 bg-green-500/5 blur-3xl rounded-full"></div>
+            <div class="absolute bottom-0 left-0 w-1/2 h-1/2 bg-green-500/5 blur-3xl rounded-full"></div>
+        </div>
+
+        <!-- Content -->
+        <div class="container relative z-10 px-4 md:px-6 space-y-12 text-center">
+            <div class="space-y-4">
+                <h1 class="text-4xl md:text-6xl font-bold tracking-tighter text-black">
+                    <span class="text-green-600">Bovine</span> Biometric 
+                    <span class="text-green-600">Identification</span>
+                </h1>
+                <p class="max-w-[800px] mx-auto text-lg md:text-xl text-gray-700">
+                    Our advanced AI system uses unique muzzle patterns to identify and track cattle,
+                    providing secure identification for insurance claims and livestock management.
+                </p>
+            </div>
+
+            <!-- Animated Cow Muzzle Graphic -->
+            <div class="relative w-full max-w-md mx-auto h-48 my-8">
+                <div class="absolute inset-0 flex items-center justify-center">
+                    <div class="w-32 h-32 md:w-40 md:h-40 rounded-full bg-gradient-to-r from-green-500 to-green-700 opacity-70 animate-pulse"></div>
+                </div>
+                <div class="absolute inset-0 flex items-center justify-center">
+                    <img src="{{ url_for('static', filename='placeholder.svg') }}" width="160" height="160" alt="Cow Muzzle Pattern" class="rounded-full border-4 border-white/20">
+                </div>
+                <div class="absolute inset-0 flex items-center justify-center">
+    <div class="w-full h-full max-w-[200px] max-h-[200px] rounded-full border border-green-500/30" style="animation: spin 20s linear infinite;"></div>
+</div>
+
+            </div>
+
+            <!-- Action Buttons - Both green now -->
+            <div class="flex flex-col sm:flex-row gap-4 justify-center">
+                <a href="{{ url_for('register') }}" 
+                   class="group relative overflow-hidden rounded-lg bg-gradient-to-br from-green-600 to-green-800 px-8 py-4 text-white shadow-lg transition-all hover:shadow-green-500/20 hover:from-green-500 hover:to-green-700">
+                    <span class="relative z-10 flex items-center justify-center gap-2 text-lg font-medium">
+                        Register a Cow
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-5 w-5 transition-transform group-hover:translate-x-1">
+                            <path d="M5 12h14"></path>
+                            <path d="m12 5 7 7-7 7"></path>
+                        </svg>
+                    </span>
+                    <span class="absolute inset-0 z-0 bg-gradient-to-br from-green-500 to-green-700 opacity-0 transition-opacity group-hover:opacity-100"></span>
+                </a>
+                
+                <a href="{{ url_for('claim') }}" 
+                   class="group relative overflow-hidden rounded-lg bg-gradient-to-br from-green-600 to-green-800 px-8 py-4 text-white shadow-lg transition-all hover:shadow-green-500/20 hover:from-green-500 hover:to-green-700">
+                    <span class="relative z-10 flex items-center justify-center gap-2 text-lg font-medium">
+                        Claim Insurance
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-5 w-5 transition-transform group-hover:translate-x-1">
+                            <path d="M5 12h14"></path>
+                            <path d="m12 5 7 7-7 7"></path>
+                        </svg>
+                    </span>
+                    <span class="absolute inset-0 z-0 bg-gradient-to-br from-green-500 to-green-700 opacity-0 transition-opacity group-hover:opacity-100"></span>
+                </a>
+            </div>
+        </div>
+
+        <!-- Scroll Indicator -->
+        <div class="absolute bottom-8 left-1/2 transform -translate-x-1/2 flex flex-col items-center text-gray-500">
+            <span class="text-sm">Scroll to learn more</span>
+            <div class="mt-2 w-1 h-8 bg-gradient-to-b from-green-500 to-transparent rounded-full animate-pulse"></div>
+        </div>
+    </div>
+
+    <!-- Features Section -->
+    <div class="bg-white py-24">
+        <div class="container px-4 md:px-6 mx-auto">
+            <h2 class="text-3xl md:text-4xl font-bold text-center text-black mb-12">
+                Advanced <span class="text-green-600">Biometric</span> Technology
+            </h2>
+            
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <div class="bg-gradient-to-br from-gray-50 to-white p-6 rounded-xl border border-green-500/10 hover:border-green-500/30 transition-all shadow-sm">
+                    <div class="w-12 h-12 bg-green-500/10 rounded-lg flex items-center justify-center mb-4">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-6 w-6 text-green-600">
+                            <path d="M2 18h.01"></path>
+                            <path d="M2 14h.01"></path>
+                            <path d="M2 10h.01"></path>
+                            <path d="M2 6h.01"></path>
+                            <path d="M4 10h16"></path>
+                            <path d="M4 14h16"></path>
+                            <path d="M8 18h7"></path>
+                            <path d="M6 6h7"></path>
+                        </svg>
+                    </div>
+                    <h3 class="text-xl font-bold text-black mb-2">Secure Database</h3>
+                    <p class="text-gray-600">Encrypted storage of unique muzzle patterns with blockchain verification.</p>
+                </div>
+                
+                <div class="bg-gradient-to-br from-gray-50 to-white p-6 rounded-xl border border-green-500/10 hover:border-green-500/30 transition-all shadow-sm">
+                    <div class="w-12 h-12 bg-green-500/10 rounded-lg flex items-center justify-center mb-4">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-6 w-6 text-green-600">
+                            <path d="M9 12l-2 2l2 2"></path>
+                            <path d="M15 12l2 2l-2 2"></path>
+                            <path d="M12 8l2 8"></path>
+                            <path d="M20 16.7a9 9 0 1 1 0-9.4"></path>
+                            <path d="M14 3l-3 6l5 2"></path>
+                        </svg>
+                    </div>
+                    <h3 class="text-xl font-bold text-black mb-2">Fraud Prevention</h3>
+                    <p class="text-gray-600">AI-powered verification system prevents fraudulent insurance claims.</p>
+                </div>
+                
+                <div class="bg-gradient-to-br from-gray-50 to-white p-6 rounded-xl border border-green-500/10 hover:border-green-500/30 transition-all shadow-sm">
+                    <div class="w-12 h-12 bg-green-500/10 rounded-lg flex items-center justify-center mb-4">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-6 w-6 text-green-600">
+                            <path d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path>
+                        </svg>
+                    </div>
+                    <h3 class="text-xl font-bold text-black mb-2">Instant Verification</h3>
+                    <p class="text-gray-600">Real-time matching algorithm provides immediate identification results.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

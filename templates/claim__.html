@@ -1,0 +1,550 @@
+{% extends "layout.html" %}
+
+{% block title %}Claim Insurance{% endblock %}
+
+{% block head %}
+<style>
+    .file-drop-area {
+        position: relative;
+        cursor: pointer;
+    }
+    .file-input {
+        position: absolute;
+        left: 0;
+        top: 0;
+        height: 100%;
+        width: 100%;
+        opacity: 0;
+        cursor: pointer;
+    }
+    #cameraContainer {
+        display: none;
+        max-width: 100%;
+        margin: 0 auto;
+    }
+    #cameraPreview {
+        width: 100%;
+        max-width: 640px;
+        height: auto;
+        border-radius: 8px;
+        border: 1px solid rgba(34, 197, 94, 0.3);
+    }
+    .camera-controls {
+        display: flex;
+        justify-content: center;
+        gap: 10px;
+        margin-top: 15px;
+    }
+    #captureCanvas {
+        display: none;
+        position: absolute;
+        left: -9999px;
+    }
+    @keyframes scan {
+        0% { transform: translateX(-100%); }
+        100% { transform: translateX(100%); }
+    }
+    .scan-animation {
+        animation: scan 2s ease-in-out infinite;
+    }
+    .camera-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        pointer-events: none;
+    }
+    .camera-frame {
+        width: 80%;
+        height: 60%;
+        border: 2px dashed rgba(34, 197, 94, 0.7);
+        border-radius: 8px;
+        position: relative;
+    }
+    .camera-frame::before {
+        content: "Position cow muzzle here";
+        position: absolute;
+        top: -25px;
+        left: 50%;
+        transform: translateX(-50%);
+        background-color: rgba(255, 255, 255, 0.8);
+        padding: 2px 8px;
+        border-radius: 4px;
+        font-size: 12px;
+        color: #16a34a;
+    }
+    .capture-flash {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: white;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.1s;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-white text-black">
+    <div class="container mx-auto px-4 py-12">
+        <a href="{{ url_for('home') }}" class="inline-flex items-center text-green-600 hover:text-green-700 mb-8">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-2 h-4 w-4">
+                <path d="M19 12H5"></path>
+                <path d="M12 19l-7-7 7-7"></path>
+            </svg>
+            Back to Home
+        </a>
+        
+        <div class="max-w-4xl mx-auto">
+            <h1 class="text-3xl md:text-4xl font-bold mb-2">Claim Insurance</h1>
+            <p class="text-gray-600 mb-8">Upload a clear image of your registered cow's muzzle for verification and insurance claim processing.</p>
+            
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="mb-6 p-4 rounded-lg {% if category == 'error' %}bg-red-100 text-red-700{% else %}bg-green-100 text-green-700{% endif %}">
+                            {{ message }}
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+            
+            <form action="{{ url_for('claim') }}" method="POST" enctype="multipart/form-data" class="space-y-8" id="claimForm">
+                <div id="dropArea" class="file-drop-area border-2 border-dashed rounded-xl p-8 text-center border-gray-300 hover:border-green-500/50 transition-all">
+                    <div class="space-y-4">
+                        <div class="w-16 h-16 bg-green-500/10 rounded-full flex items-center justify-center mx-auto">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-8 w-8 text-green-600">
+                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                <polyline points="17 8 12 3 7 8"></polyline>
+                                <line x1="12" y1="3" x2="12" y2="15"></line>
+                            </svg>
+                        </div>
+                        <div>
+                            <p class="text-lg font-medium">Drag and drop your image here</p>
+                            <p class="text-sm text-gray-600 mt-1">Or use one of the options below</p>
+                        </div>
+                        <div class="flex flex-wrap justify-center gap-4">
+                            <div class="relative">
+                                <button type="button" class="px-4 py-2 border rounded-md border-green-500/50 text-green-600 hover:bg-green-500/10">
+                                    Select Image
+                                </button>
+                                <input type="file" name="image" accept="image/*" class="file-input" id="imageInput">
+                            </div>
+                            <button type="button" id="useCameraBtn" class="px-4 py-2 border rounded-md border-green-500/50 text-green-600 hover:bg-green-500/10 flex items-center">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-2 h-4 w-4">
+                                    <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path>
+                                    <circle cx="12" cy="13" r="4"></circle>
+                                </svg>
+                                Use Camera
+                            </button>
+                        </div>
+                        <p class="text-xs text-gray-500 mt-2">Supported formats: JPG, PNG, HEIC</p>
+                    </div>
+                </div>
+                
+                <div id="cameraContainer" class="rounded-xl p-4 border border-gray-300">
+                    <div class="relative">
+                        <video id="cameraPreview" autoplay playsinline muted></video>
+                        <div class="camera-overlay">
+                            <div class="camera-frame"></div>
+                        </div>
+                        <div id="captureFlash" class="capture-flash"></div>
+                    </div>
+                    <div class="camera-controls">
+                        <button type="button" id="captureBtn" class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 flex items-center">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-2 h-4 w-4">
+                                <circle cx="12" cy="12" r="10"></circle>
+                                <circle cx="12" cy="12" r="3"></circle>
+                            </svg>
+                            Take Photo
+                        </button>
+                        <button type="button" id="switchCameraBtn" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 flex items-center">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-2 h-4 w-4">
+                                <path d="M3 4h18"></path>
+                                <path d="m12 11 7 3-7 3"></path>
+                                <path d="M5 11v6"></path>
+                            </svg>
+                            Switch Camera
+                        </button>
+                        <button type="button" id="closeCameraBtn" class="px-4 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-100">
+                            Cancel
+                        </button>
+                    </div>
+                </div>
+                
+                <div id="imagePreviewContainer" class="hidden space-y-4">
+                    <div class="relative max-w-md mx-auto">
+                        <img id="previewImage" class="w-full h-auto rounded-lg border border-green-500/30" src="/placeholder.svg">
+                        <div id="scanOverlay" class="hidden absolute inset-0 overflow-hidden rounded-lg">
+                            <div class="absolute inset-0 bg-green-500/10"></div>
+                            <div class="absolute inset-0 w-full h-full bg-gradient-to-r from-green-500/30 to-transparent scan-animation"></div>
+                        </div>
+                    </div>
+                    <div class="flex justify-center gap-4">
+                        <button type="button" id="removeBtn" class="px-4 py-2 border rounded-md border-red-500/50 text-red-500 hover:bg-red-500/10 flex items-center">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-2 h-4 w-4">
+                                <path d="M18 6 6 18"></path>
+                                <path d="m6 6 12 12"></path>
+                            </svg>
+                            Remove
+                        </button>
+                        <button type="button" id="changeBtn" class="px-4 py-2 border rounded-md border-green-500/50 text-green-600 hover:bg-green-500/10 flex items-center">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-2 h-4 w-4">
+                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                <polyline points="17 8 12 3 7 8"></polyline>
+                                <line x1="12" y1="3" x2="12" y2="15"></line>
+                            </svg>
+                            Change
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="space-y-2">
+                        <label for="claimId" class="block text-black font-medium">Claim ID</label>
+                        <input type="text" id="claimId" name="claimId" placeholder="Enter claim ID" class="w-full px-3 py-2 bg-white border border-gray-300 focus:outline-none focus:border-green-500 text-black rounded-md">
+                    </div>
+                    <div class="space-y-2">
+                        <label for="cowId" class="block text-black font-medium">Registered Cow ID/Tag Number</label>
+                        <input type="text" id="cowId" name="cowId" placeholder="Enter ID or tag number" class="w-full px-3 py-2 bg-white border border-gray-300 focus:outline-none focus:border-green-500 text-black rounded-md">
+                    </div>
+                    <div class="space-y-2 md:col-span-2">
+                        <label for="reason" class="block text-black font-medium">Reason for Claim</label>
+                        <textarea id="reason" name="reason" rows="4" placeholder="Describe the reason for your insurance claim" class="w-full px-3 py-2 bg-white border border-gray-300 focus:outline-none focus:border-green-500 text-black rounded-md"></textarea>
+                    </div>
+                </div> -->
+                
+                <button type="submit" id="submitBtn" class="w-full bg-gradient-to-r from-green-600 to-green-800 hover:from-green-500 hover:to-green-700 text-white py-6 text-lg rounded-lg flex items-center justify-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-2 h-5 w-5">
+                        <circle cx="11" cy="11" r="8"></circle>
+                        <path d="m21 21-4.3-4.3"></path>
+                    </svg>
+                    Verify and Submit Claim
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Hidden canvas element for capturing photos -->
+<canvas id="captureCanvas" width="1280" height="720"></canvas>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Elements
+        const dropArea = document.getElementById('dropArea');
+        const imageInput = document.getElementById('imageInput');
+        const imagePreviewContainer = document.getElementById('imagePreviewContainer');
+        const previewImage = document.getElementById('previewImage');
+        const scanOverlay = document.getElementById('scanOverlay');
+        const removeBtn = document.getElementById('removeBtn');
+        const changeBtn = document.getElementById('changeBtn');
+        const submitBtn = document.getElementById('submitBtn');
+        const useCameraBtn = document.getElementById('useCameraBtn');
+        const cameraContainer = document.getElementById('cameraContainer');
+        const cameraPreview = document.getElementById('cameraPreview');
+        const captureBtn = document.getElementById('captureBtn');
+        const switchCameraBtn = document.getElementById('switchCameraBtn');
+        const closeCameraBtn = document.getElementById('closeCameraBtn');
+        const captureCanvas = document.getElementById('captureCanvas');
+        const captureFlash = document.getElementById('captureFlash');
+        const claimForm = document.getElementById('claimForm');
+        
+        // Variables for camera
+        let stream = null;
+        let facingMode = 'environment'; // Start with rear camera
+        
+        // Function to handle file selection
+        function handleFileSelect(file) {
+            if (file && file.type.startsWith('image/')) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    previewImage.src = e.target.result;
+                    
+                    dropArea.classList.add('hidden');
+                    cameraContainer.style.display = 'none';
+                    imagePreviewContainer.classList.remove('hidden');
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+        
+        // File input change event
+        imageInput.addEventListener('change', function(e) {
+            handleFileSelect(this.files[0]);
+        });
+        
+        // Drag and drop events
+        dropArea.addEventListener('dragover', function(e) {
+            e.preventDefault();
+            dropArea.classList.add('border-green-500');
+        });
+        
+        dropArea.addEventListener('dragleave', function() {
+            dropArea.classList.remove('border-green-500');
+        });
+        
+        dropArea.addEventListener('drop', function(e) {
+            e.preventDefault();
+            dropArea.classList.remove('border-green-500');
+            
+            const file = e.dataTransfer.files[0];
+            handleFileSelect(file);
+            
+            // Also update the file input
+            const dataTransfer = new DataTransfer();
+            dataTransfer.items.add(file);
+            imageInput.files = dataTransfer.files;
+        });
+        
+        // Remove button click event
+        removeBtn.addEventListener('click', function() {
+            previewImage.src = '';
+            imageInput.value = '';
+            imagePreviewContainer.classList.add('hidden');
+            dropArea.classList.remove('hidden');
+            scanOverlay.classList.add('hidden');
+        });
+        
+        // Change button click event
+        changeBtn.addEventListener('click', function() {
+            imageInput.click();
+        });
+        
+        // Use Camera button click event
+        useCameraBtn.addEventListener('click', function() {
+            dropArea.classList.add('hidden');
+            imagePreviewContainer.classList.add('hidden');
+            cameraContainer.style.display = 'block';
+            
+            // Start the camera
+            startCamera();
+        });
+        
+        // Function to start the camera
+        function startCamera() {
+            // Stop any existing stream
+            if (stream) {
+                stream.getTracks().forEach(track => track.stop());
+            }
+            
+            // Access the camera
+            navigator.mediaDevices.getUserMedia({ 
+                video: { 
+                    facingMode: facingMode,
+                    width: { ideal: 1280 },
+                    height: { ideal: 720 }
+                }
+            })
+            .then(function(cameraStream) {
+                stream = cameraStream;
+                cameraPreview.srcObject = stream;
+                
+                // Wait for the video to be ready
+                cameraPreview.onloadedmetadata = function() {
+                    cameraPreview.play();
+                };
+            })
+            .catch(function(error) {
+                console.error('Error accessing camera:', error);
+                alert('Could not access the camera. Please make sure you have granted camera permissions or try using a different browser.');
+                dropArea.classList.remove('hidden');
+                cameraContainer.style.display = 'none';
+            });
+        }
+        
+        // Switch camera button click event
+        switchCameraBtn.addEventListener('click', function() {
+            facingMode = facingMode === 'environment' ? 'user' : 'environment';
+            startCamera();
+        });
+        
+        // Capture button click event
+        captureBtn.addEventListener('click', function() {
+            if (!stream) {
+                console.error('No camera stream available');
+                return;
+            }
+            
+            try {
+                // Show flash effect
+                captureFlash.style.opacity = '0.7';
+                setTimeout(() => {
+                    captureFlash.style.opacity = '0';
+                }, 100);
+                
+                // Make sure video is playing
+                if (cameraPreview.paused || cameraPreview.ended) {
+                    console.warn('Video is paused or ended, attempting to play');
+                    cameraPreview.play();
+                }
+                
+                // Wait a moment to ensure video is ready
+                setTimeout(() => {
+                    // Set canvas dimensions to match the video
+                    const width = cameraPreview.videoWidth || 640;
+                    const height = cameraPreview.videoHeight || 480;
+                    
+                    console.log(`Capturing image at ${width}x${height}`);
+                    
+                    captureCanvas.width = width;
+                    captureCanvas.height = height;
+                    
+                    // Draw the current video frame to the canvas
+                    const context = captureCanvas.getContext('2d');
+                    context.drawImage(cameraPreview, 0, 0, width, height);
+                    
+                    // Get the image as a data URL first (as a fallback)
+                    const dataURL = captureCanvas.toDataURL('image/jpeg');
+                    
+                    // Try to get the blob
+                    try {
+                        captureCanvas.toBlob(function(blob) {
+                            if (!blob) {
+                                console.error('Failed to create blob from canvas');
+                                // Use the data URL as fallback
+                                handleCapturedImage(dataURL);
+                                return;
+                            }
+                            
+                            // Get the MIME type from the blob
+                            const mimeType = blob.type || 'image/jpeg';
+                            
+                            // Determine appropriate file extension based on MIME type
+                            let fileExtension = 'jpg'; // Default
+                            if (mimeType.includes('png')) {
+                                fileExtension = 'png';
+                            } else if (mimeType.includes('webp')) {
+                                fileExtension = 'webp';
+                            }
+                            
+                            console.log(`Image captured with MIME type: ${mimeType}, using extension: .${fileExtension}`);
+                            
+                            // Create a File object with the original MIME type
+                            const imageFile = new File(
+                                [blob], 
+                                `camera_capture.${fileExtension}`, 
+                                { type: mimeType }
+                            );
+                            
+                            // Update the file input with the captured image
+                            const dataTransfer = new DataTransfer();
+                            dataTransfer.items.add(imageFile);
+                            imageInput.files = dataTransfer.files;
+                            
+                            // Create a URL for the blob and show it in the preview
+                            const imageURL = URL.createObjectURL(blob);
+                            previewImage.src = imageURL;
+                            
+                            // Show the image preview
+                            cameraContainer.style.display = 'none';
+                            imagePreviewContainer.classList.remove('hidden');
+                            
+                            // Stop the camera stream
+                            stopCameraStream();
+                        }, 'image/jpeg', 0.95); // Use JPEG with high quality as default
+                    } catch (blobError) {
+                        console.error('Error creating blob:', blobError);
+                        // Use the data URL as fallback
+                        handleCapturedImage(dataURL);
+                    }
+                }, 100);
+            } catch (error) {
+                console.error('Error capturing image:', error);
+                alert('Failed to capture image. Please try again or use the file upload option.');
+            }
+        });
+        
+        // Function to handle captured image from data URL (fallback method)
+        function handleCapturedImage(dataURL) {
+            console.log('Using fallback method with data URL');
+            
+            // Convert data URL to blob
+            const byteString = atob(dataURL.split(',')[1]);
+            const mimeType = dataURL.split(',')[0].split(':')[1].split(';')[0];
+            const ab = new ArrayBuffer(byteString.length);
+            const ia = new Uint8Array(ab);
+            
+            for (let i = 0; i < byteString.length; i++) {
+                ia[i] = byteString.charCodeAt(i);
+            }
+            
+            const blob = new Blob([ab], { type: mimeType });
+            
+            // Determine file extension
+            let fileExtension = 'jpg';
+            if (mimeType.includes('png')) {
+                fileExtension = 'png';
+            } else if (mimeType.includes('webp')) {
+                fileExtension = 'webp';
+            }
+            
+            // Create file and update input
+            const imageFile = new File([blob], `camera_capture.${fileExtension}`, { type: mimeType });
+            const dataTransfer = new DataTransfer();
+            dataTransfer.items.add(imageFile);
+            imageInput.files = dataTransfer.files;
+            
+            // Update preview
+            previewImage.src = dataURL;
+            cameraContainer.style.display = 'none';
+            imagePreviewContainer.classList.remove('hidden');
+            
+            // Stop camera
+            stopCameraStream();
+        }
+        
+        // Close camera button click event
+        closeCameraBtn.addEventListener('click', function() {
+            stopCameraStream();
+            cameraContainer.style.display = 'none';
+            dropArea.classList.remove('hidden');
+        });
+        
+        // Function to stop the camera stream
+        function stopCameraStream() {
+            if (stream) {
+                stream.getTracks().forEach(track => track.stop());
+                stream = null;
+            }
+        }
+        
+        // Form submit - add loading state and scanning animation
+        claimForm.addEventListener('submit', function(e) {
+            if (imageInput.files.length > 0) {
+                e.preventDefault();
+                
+                // Show scanning overlay
+                scanOverlay.classList.remove('hidden');
+                
+                // Disable submit button and show verifying state
+                submitBtn.disabled = true;
+                submitBtn.innerHTML = `
+                    <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    Verifying Muzzle Pattern...
+                `;
+                
+                // Simulate verification process
+                setTimeout(() => {
+                    this.submit();
+                }, 2000);
+            } else {
+                e.preventDefault();
+                alert('Please upload an image or take a photo using the camera before submitting.');
+            }
+        });
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,74 @@
+{% extends "layout.html" %}
+
+{% block title %}Verification Successful{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-white text-black">
+    <div class="container mx-auto px-4 py-12">
+        <div class="max-w-4xl mx-auto">
+            <div class="mt-8 p-6 bg-green-500/10 border border-green-500/30 rounded-xl">
+                <div class="flex items-start">
+                    <div class="flex-shrink-0">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-6 w-6 text-green-600">
+                            <polyline points="20 6 9 17 4 12"></polyline>
+                        </svg>
+                    </div>
+                    <div class="ml-3">
+                        <h3 class="text-lg font-medium text-green-600">Verification Successful</h3>
+                        <div class="mt-2 text-sm text-gray-700">
+                            <p>The muzzle pattern has been successfully matched to a registered cow in our system. Your claim is now ready for processing.</p>
+                        </div>
+                        <div class="mt-4">
+                            <a href="{{ url_for('home') }}" class="text-green-600 hover:text-green-700 font-medium">
+                                Return to Home
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            
+            <div class="mt-8 p-6 bg-white border border-gray-200 shadow-sm rounded-xl">
+                <h3 class="text-lg font-medium text-gray-900 mb-4">Claim Processing Details</h3>
+                <div class="space-y-3">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm">
+                        <div class="text-gray-600">Matched Cow ID:</div>
+                        <div class="font-medium">{{ matched_id }}</div>
+                    </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm">
+                        <div class="text-gray-600">Geo Location:</div>
+                        <div class="font-medium">{{ geo_location }}</div>
+                    </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm">
+                        <div class="text-gray-600">Submission Date:</div>
+                        <div class="font-medium">{{ date }}</div>
+                    </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm">
+                        <div class="text-gray-600">Status:</div>
+                        <div class="font-medium text-green-600">Verified</div>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm">
+                        <div class="text-gray-600">Submission Date:</div>
+                        <div class="font-medium">{{ message }}</div>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm">
+                        <div class="text-gray-600">Muzzle Image:</div>
+                        <div class="font-medium">
+                            <img src= "{{ image_url }}" 
+                                 alt="Registered animal image"
+                                 class="max-w-[200px] h-auto rounded-lg mt-2">
+                        </div>
+                    </div>
+
+                    <div class="border-t border-gray-200 my-4"></div>
+                    <p class="text-gray-600 text-sm">
+                        Our team will review your claim and contact you within 2-7 business days with further information.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
