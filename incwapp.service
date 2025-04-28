@@ -1,0 +1,13 @@
+[Unit]
+Description=INCW Cow Muzzle Flask App
+After=network.target
+
+[Service]
+User=ubuntu
+WorkingDirectory=/home/ubuntu/INCW_APP
+ExecStart=/home/ubuntu/INCW_APP/.venv/bin/python /home/ubuntu/INCW_APP/app.py
+Restart=always
+Environment=PYTHONUNBUFFERED=1
+
+[Install]
+WantedBy=multi-user.target
